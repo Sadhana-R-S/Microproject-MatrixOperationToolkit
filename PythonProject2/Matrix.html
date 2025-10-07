@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌸 Matrix Operations Toolkit 🌸</title>
+  <style>
+    body {
+      font-family: "Comic Sans MS", cursive, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 40px;
+      background: linear-gradient(135deg, #ffe6ee, #fff0f1,#ced1f8);
+      background-size: 600% 600%;
+      animation: gradientShift 15s ease infinite;
+      overflow-x: hidden;
+    }
+    @keyframes gradientShift{
+      0%{ background-position: 0% 50%;}
+      50%{background-position:100% 50%;}
+      100%{background-position:0% 50%;}
+    }
+    .floating{position:absolute;font-size:40px;animation:float 10s linear infinite;}
+    @keyframes float{from{transform:translateY(100vh);opacity:1;}to{transform:translateY(-10vh);opacity:0;}}
+    h1{color:#663399;text-shadow:2px 2px #fff;}
+    select, input, button{margin:10px;padding:10px;font-size:16px;border-radius:20px;border:2px solid #cc99ff;}
+    button{background:#ff007f;color:white;cursor:pointer;box-shadow:0 4px 6px rgba(0,0,0,0.1);transition:0.3s;}
+    button:hover{background:#ff66b2;}
+    .matrix-container{display:flex;justify-content:space-around;margin:20px auto;width:90%;flex-wrap:wrap;}
+    .matrix-grid{display:grid;gap:25px;justify-content:center;}
+    .matrix-grid input{width:50px;height:40px;text-align:center;border:2px solid #cc99ff;border-radius:10px;font-size:16px;}
+    #result{margin-top:20px;display:grid;gap:8px;justify-content:center;}
+    #result div{border:2px solid #b17c82;border-radius:15px;background:#fff;font-weight:bold;font-size:15px;color:#333;height:40px;line-height:40px;box-shadow:0 3px 6px rgba(0,0,0,0.1);padding:0 10px;}
+  </style>
+</head>
+<body>
+  <h1>🌸 MATRIX OPERATIONS 🌸</h1>
+  <h2>Under a Minute</h2>
+
+  <div>
+    <label><b>Choose Operation:</b></label>
+    <select id="operation">
+      <option value="">-- Select --</option>
+      <option value="add">➕ Add</option>
+      <option value="subtract">➖ Subtract</option>
+      <option value="multiply">✖ Multiply</option>
+      <option value="determinant">📐 Determinant</option>
+      <option value="inverse">🔄 Inverse</option>
+      <option value="transpose">🔁 Transpose</option>
+      <option value="rowechelon">📏 Row Echelon Form</option>
+      <option value="rank">🎯 Rank</option>
+    </select>
+
+    <label><b>Rows:</b></label>
+    <input type="number" id="rows" value="3" min="1">
+    <label><b>Columns:</b></label>
+    <input type="number" id="cols" value="3" min="1">
+    <button onclick="setupMatrices()">✨ Create Matrices ✨</button>
+  </div>
+
+  <div class="error" id="error"></div>
+  <div class="matrix-container" id="matrices"></div>
+  <button onclick="calculate()">💡 Calculate 💡</button>
+
+  <h2>🎀 Result 🎀</h2>
+  <div id="result"></div>
+
+  <button onclick="location.href='Index.html'">🏠 Back to Home</button>
+
+  <script>
+    function setupMatrices() {
+      const op = document.getElementById("operation").value;
+      const rows = +document.getElementById("rows").value;
+      const cols = +document.getElementById("cols").value;
+      const error = document.getElementById("error");
+      const container = document.getElementById("matrices");
+      error.textContent = "";
+      container.innerHTML = "";
+
+      if (!op) return error.textContent = "⚠️ Choose an operation!";
+      if (rows <= 0 || cols <= 0) return error.textContent = "⚠️ Rows/Columns must be positive!";
+
+      let num = (["determinant","inverse","transpose","rowechelon","rank"].includes(op)) ? 1 : 2;
+      for (let m=0; m<num; m++) {
+        let div = document.createElement("div");
+        div.className = "matrix";
+        div.innerHTML = `<h2>Matrix ${String.fromCharCode(65+m)}</h2>`;
+        let grid = document.createElement("div");
+        grid.className = "matrix-grid";
+        grid.style.gridTemplateColumns = `repeat(${cols}, 50px)`;
+        for (let i=0; i<rows*cols; i++) {
+          let input=document.createElement("input");
+          input.type="number";
+          input.value=0;
+          grid.appendChild(input);
+        }
+        div.appendChild(grid);
+        container.appendChild(div);
+      }
+    }
+
+    function getMatrix(index) {
+      let grid = document.querySelectorAll(".matrix-grid")[index];
+      let inputs = grid.querySelectorAll("input");
+      let rows = +document.getElementById("rows").value;
+      let cols = +document.getElementById("cols").value;
+      let m=[];
+      for(let r=0;r<rows;r++){
+        let row=[];
+        for(let c=0;c<cols;c++) row.push(Number(inputs[r*cols+c].value));
+        m.push(row);
+      }
+      return m;
+    }
+
+    function displayResult(matrix) {
+      const result = document.getElementById("result");
+      result.innerHTML="";
+      if(!Array.isArray(matrix[0])) matrix=[[matrix]];
+      result.style.gridTemplateColumns = `repeat(${matrix[0].length},60px)`;
+      for(let r=0;r<matrix.length;r++){
+        for(let c=0;c<matrix[0].length;c++){
+          let cell=document.createElement("div");
+          cell.textContent=isNaN(matrix[r][c])?"":matrix[r][c].toFixed(2);
+          result.appendChild(cell);
+        }
+      }
+    }
+
+    function calculate() {
+      const op=document.getElementById("operation").value;
+      const A=getMatrix(0);
+      const B=(["add","subtract","multiply"].includes(op))?getMatrix(1):null;
+      const error=document.getElementById("error");
+      error.textContent="";
+      let result;
+
+      try {
+        switch(op){
+          case "add": result=A.map((r,i)=>r.map((v,j)=>v+B[i][j])); break;
+          case "subtract": result=A.map((r,i)=>r.map((v,j)=>v-B[i][j])); break;
+          case "multiply":
+            if(A[0].length!==B.length) throw "Cols of A must equal rows of B!";
+            result=A.map(r=>Array(B[0].length).fill(0));
+            for(let i=0;i<A.length;i++)
+              for(let j=0;j<B[0].length;j++)
+                for(let k=0;k<A[0].length;k++)
+                  result[i][j]+=A[i][k]*B[k][j];
+            break;
+          case "determinant": result=[[determinant(A)]]; break;
+          case "inverse": result=inverse(A); break;
+          case "transpose": result=transpose(A); break;
+          case "rowechelon": result=rowEchelon(A); break;
+          case "rank": result=[[rank(A)]]; break;
+          default: throw "Unknown operation!";
+        }
+        displayResult(result);
+      } catch(e){ error.textContent="⚠️ "+e; }
+    }
+
+    function determinant(m){
+      if(m.length===1) return m[0][0];
+      if(m.length===2) return m[0][0]*m[1][1]-m[0][1]*m[1][0];
+      let det=0;
+      for(let c=0;c<m.length;c++){
+        let sub=m.slice(1).map(r=>r.filter((_,j)=>j!==c));
+        det+=((c%2===0?1:-1)*m[0][c]*determinant(sub));
+      }
+      return det;
+    }
+
+    function inverse(m){
+      let det=determinant(m);
+      if(det===0) throw "Matrix is singular (no inverse)!";
+      let n=m.length;
+      let adj=Array.from({length:n},()=>Array(n).fill(0));
+      for(let i=0;i<n;i++)
+        for(let j=0;j<n;j++){
+          let sub=m.filter((_,r)=>r!==i).map(r=>r.filter((_,c)=>c!==j));
+          adj[j][i]=(((i+j)%2===0?1:-1)*determinant(sub))/det;
+        }
+      return adj;
+    }
+
+    function transpose(m){
+      return m[0].map((_,i)=>m.map(r=>r[i]));
+    }
+
+    // Correct Row Echelon Form (REF)
+    function rowEchelon(m){
+      let A = m.map(r=>r.slice());
+      let rows = A.length, cols = A[0].length;
+      let pivotRow = 0;
+      const eps = 1e-12;
+
+      for (let col=0; col<cols && pivotRow<rows; col++){
+        // Find pivot row
+        let maxRow = pivotRow;
+        for (let r=pivotRow+1; r<rows; r++)
+          if(Math.abs(A[r][col])>Math.abs(A[maxRow][col])) maxRow=r;
+        if(Math.abs(A[maxRow][col])<eps) continue; // skip zero column
+
+        [A[pivotRow], A[maxRow]] = [A[maxRow], A[pivotRow]]; // swap pivot
+
+        // Eliminate rows below
+        for(let r=pivotRow+1; r<rows; r++){
+          let factor = A[r][col]/A[pivotRow][col];
+          for(let c=col; c<cols; c++){
+            A[r][c] -= factor*A[pivotRow][c];
+            if(Math.abs(A[r][c])<eps) A[r][c]=0;
+          }
+        }
+        pivotRow++;
+      }
+      return A;
+    }
+
+    function rank(m){
+      let ref = rowEchelon(m);
+      const eps = 1e-10;
+      return ref.filter(row=>row.some(v=>Math.abs(v)>eps)).length;
+    }
+  </script>
+</body>
+</html>
